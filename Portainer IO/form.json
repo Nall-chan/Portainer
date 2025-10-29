@@ -1,0 +1,67 @@
+{
+    "elements": [
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "name": "Open",
+                    "type": "CheckBox",
+                    "caption": "Open",
+                    "width": "300px"
+                },
+                {
+                    "name": "Host",
+                    "type": "ValidationTextBox",
+                    "caption": "Host",
+                    "width": "300px"
+                },
+                {
+                    "name": "OmadaId",
+                    "type": "ValidationTextBox",
+                    "caption": "Omada-ID",
+                    "width": "300px"
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "Select",
+                    "caption": "Login method",
+                    "download": "",
+                    "enabled": true,
+                    "link": false,
+                    "name": "LoginType",
+                    "options": [
+                        {
+                            "caption": "User credentials",
+                            "value": 0
+                        },
+                        {
+                            "caption": "Access tokens",
+                            "value": 1
+                        }
+                    ],
+                    "onChange": "IPS_RequestAction($id, 'LoginType', $LoginType);",
+                    "value": "",
+                    "visible": true,
+                    "width": "300px"
+                },
+                {
+                    "name": "ClientId",
+                    "type": "ValidationTextBox",
+                    "caption": "Client Id",
+                    "width": "300px"
+                },
+                {
+                    "name": "ClientSecret",
+                    "type": "PasswordTextBox",
+                    "caption": "Client Secret"
+                }
+            ]
+        }
+    ],
+    "actions": [],
+    "status": []
+}

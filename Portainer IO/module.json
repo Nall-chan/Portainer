@@ -1,0 +1,16 @@
+{
+    "id": "{FEB4D3D2-AD8A-9C6A-72D8-DF99AC625768}",
+    "name": "Portainer IO",
+    "type": 1,
+    "vendor": "Portainer",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [
+        "{80CBC81C-3722-EFA3-BF6F-D7CC9B0E0076}"
+    ],
+    "implemented": [
+        "{A5558F9B-F5AE-A5B0-C252-328740544A21}"
+    ],
+    "prefix": "PORTAINER",
+    "url": "https://github.com/Nall-chan/Portainer"
+}

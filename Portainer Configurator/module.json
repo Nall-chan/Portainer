@@ -1,0 +1,16 @@
+{
+    "id": "{781E99AA-6F79-4430-0DF5-388D82E29019}",
+    "name": "Portainer Configurator",
+    "type": 3,
+    "vendor": "Portainer",
+    "aliases": [],
+    "parentRequirements": [
+        "{A5558F9B-F5AE-A5B0-C252-328740544A21}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{80CBC81C-3722-EFA3-BF6F-D7CC9B0E0076}"
+    ],
+    "prefix": "PORTAINER",
+    "url": "https://github.com/Nall-chan/Portainer"
+}

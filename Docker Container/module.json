@@ -1,0 +1,16 @@
+{
+    "id": "{80AA764D-EABE-B85E-D997-43A2D244D6E8}",
+    "name": "Docker Container",
+    "type": 3,
+    "vendor": "Portainer",
+    "aliases": [],
+    "parentRequirements": [
+        "{A5558F9B-F5AE-A5B0-C252-328740544A21}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{80CBC81C-3722-EFA3-BF6F-D7CC9B0E0076}"
+    ],
+    "prefix": "PORTAINER",
+    "url": "https://github.com/Nall-chan/Portainer"
+}

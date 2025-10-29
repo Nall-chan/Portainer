@@ -1,0 +1,12 @@
+{
+    "id": "{65B98A8C-3C0C-4CA5-FC13-EB86EAB660C3}",
+    "name": "Portainer API",
+    "author": "Michael Tröger",
+    "url": "https://github.com/Nall-chan/Portainer",
+    "compatibility": {
+        "version": "7.1"
+    },
+    "version": "0.1",
+    "build": 1,
+    "date": 0
+}
