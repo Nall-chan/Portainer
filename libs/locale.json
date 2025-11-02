@@ -1,0 +1,39 @@
+{
+    "translations": {
+        "de": {
+            "Created": "Erstellt",
+            "No of Restarts": "Anzahl der Neustarts",
+            "Running": "Läuft",
+            "not running": "läuft nicht",
+            "running": "läuft",
+            "Restarting": "Wird neu gestartet",
+            "not restarting": "wird nicht neu gestartet",
+            "restarting": "wird neu gestartet",
+            "Paused": "Pausiert",
+            "not paused": "nicht pausiert",
+            "paused": "pausiert",
+            "Dead": "Tot",
+            "dead": "tot",
+            "not dead": "nicht tot",
+            "Error": "Fehler",
+            "Removing": "Entfernen",
+            "Exited": "Beendet",
+            "Started at": "Gestartet um",
+            "No of running containers": "Anzahl laufender Container",
+            "No of stopped containers": "Anzahl gestoppter Container",
+            "No of healthy containers": "Anzahl gesunder Container",
+            "No of unhealthy containers": "Anzahl nicht gesunder Container",
+            "No of total containers": "Anzahl aller Container",
+            "No of services": "Anzahl der Dienste",
+            "No of images": "Anzahl der Images",
+            "Size of all images": "Größe alle Images",
+            "No of volumes": "Anzahl der Volumes",
+            "No of networks": "Anzahl der Netzwerke",
+            "No of stacks": "Anzahl der Stacks",
+            "active": "Aktiv",
+            "inactive": "Inaktiv",
+            "Creation date": "Erstellungsdatum",
+            "Update date": "Aktualisierungsdatum"
+        }
+    }
+}

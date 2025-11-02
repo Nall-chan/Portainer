@@ -1,36 +1,76 @@
 <?php
 
 declare(strict_types=1);
-	class DockerSystem extends IPSModule
-	{
-		public function Create()
-		{
-			//Never delete this line!
-			parent::Create();
 
-			$this->RequireParent('{FEB4D3D2-AD8A-9C6A-72D8-DF99AC625768}');
-		}
+eval('declare(strict_types=1);namespace DockerSystem {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/BufferHelper.php') . '}');
+eval('declare(strict_types=1);namespace DockerSystem {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
+require_once dirname(__DIR__) . '/libs/PortainerLib.php';
 
-		public function Destroy()
-		{
-			//Never delete this line!
-			parent::Destroy();
-		}
+/**
+ * @method bool SendDebug(string $Message, mixed $Data, int $Format)
+ *
+ * @property string $Host
+ */
+class DockerSystem extends IPSModuleStrict
+{
+    use \DockerSystem\BufferHelper;
+    use \DockerSystem\DebugHelper;
+    use \Portainer\Variables;
 
-		public function ApplyChanges()
-		{
-			//Never delete this line!
-			parent::ApplyChanges();
-		}
+    public function Create(): void
+    {
+        //Never delete this line!
+        parent::Create();
+        $this->RegisterPropertyInteger(\Docker\System\Property::EnvironmentId, 0);
+        $this->RegisterPropertyInteger(\Docker\System\Property::UpdateInterval, 0);
+        $this->RegisterTimer(\Docker\System\Timer::UpdateInfo, 0, 'PORTAINER_RequestState($_IPS[\'TARGET\']);');
+    }
 
-		public function Send()
-		{
-			$this->SendDataToParent(json_encode(['DataID' => '{A5558F9B-F5AE-A5B0-C252-328740544A21}']));
-		}
+    public function Destroy(): void
+    {
+        //Never delete this line!
+        parent::Destroy();
+    }
 
-		public function ReceiveData($JSONString)
-		{
-			$data = json_decode($JSONString);
-			IPS_LogMessage('Device RECV', utf8_decode($data->Buffer));
-		}
-	}
+    public function ApplyChanges(): void
+    {
+        //Never delete this line!
+        parent::ApplyChanges();
+        $Interval = $this->ReadPropertyInteger(\Docker\System\Property::UpdateInterval) * 1000;
+        $this->SetTimerInterval(\Docker\System\Timer::UpdateInfo, $Interval);
+        if ($this->HasActiveParent()) {
+            $this->RequestState();
+        }
+    }
+
+    public function RequestState(): bool
+    {
+        $Result = $this->FetchData();
+        if (is_array($Result)) {
+            $this->SetStateVariables($Result, \Docker\System\Variables::$Config);
+            return true;
+        }
+        return false;
+    }
+
+    private function FetchData(): bool|array
+    {
+        $Uri = \Portainer\Api\url::GetDashboardUrl($this->ReadPropertyInteger(\Docker\System\Property::EnvironmentId));
+        $this->SendDebug('FetchData', $Uri, 0);
+        $Response = $this->SendDataToParent(json_encode(
+            [
+                'DataID' => \Portainer\GUID::SendToIO,
+                'URI'    => $Uri,
+                'Method' => \Portainer\Api\HTTP::GET,
+                'Data'   => []
+            ]
+        ));
+        $this->SendDebug('FetchData Result', $Response, 0);
+        if ($Response !== false) {
+            $Response = unserialize($Response);
+            $this->SendDebug('FetchData Data', $Response, 0);
+            return $Response;
+        }
+        return [];
+    }
+}

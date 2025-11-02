@@ -1,36 +1,127 @@
 <?php
 
 declare(strict_types=1);
-	class PortainerStack extends IPSModule
-	{
-		public function Create()
-		{
-			//Never delete this line!
-			parent::Create();
 
-			$this->RequireParent('{FEB4D3D2-AD8A-9C6A-72D8-DF99AC625768}');
-		}
+eval('declare(strict_types=1);namespace PortainerStack {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/BufferHelper.php') . '}');
+eval('declare(strict_types=1);namespace PortainerStack {?>' . file_get_contents(dirname(__DIR__) . '/libs/helper/DebugHelper.php') . '}');
+require_once dirname(__DIR__) . '/libs/PortainerLib.php';
 
-		public function Destroy()
-		{
-			//Never delete this line!
-			parent::Destroy();
-		}
+/**
+ * @method bool SendDebug(string $Message, mixed $Data, int $Format)
+ *
+ * @property string $Host
+ */
+class PortainerStack extends IPSModuleStrict
+{
+    use \PortainerStack\BufferHelper;
+    use \PortainerStack\DebugHelper;
+    use \Portainer\Variables;
 
-		public function ApplyChanges()
-		{
-			//Never delete this line!
-			parent::ApplyChanges();
-		}
+    public function Create(): void
+    {
+        //Never delete this line!
+        parent::Create();
 
-		public function Send()
-		{
-			$this->SendDataToParent(json_encode(['DataID' => '{A5558F9B-F5AE-A5B0-C252-328740544A21}']));
-		}
+        $this->RegisterPropertyInteger(\Portainer\Stack\Property::EnvironmentId, 0);
+        $this->RegisterPropertyInteger(\Portainer\Stack\Property::StackId, 0);
+        $this->RegisterPropertyInteger(\Portainer\Stack\Property::UpdateInterval, 0);
+        $this->RegisterTimer(\Portainer\Stack\Timer::UpdateInfo, 0, 'PORTAINER_RequestState($_IPS[\'TARGET\']);');
 
-		public function ReceiveData($JSONString)
-		{
-			$data = json_decode($JSONString);
-			IPS_LogMessage('Device RECV', utf8_decode($data->Buffer));
-		}
-	}
+    }
+
+    public function Destroy(): void
+    {
+        //Never delete this line!
+        parent::Destroy();
+    }
+
+    public function ApplyChanges(): void
+    {
+        //Never delete this line!
+        parent::ApplyChanges();
+
+        $Interval = $this->ReadPropertyInteger(\Portainer\Stack\Property::UpdateInterval) * 1000;
+        $this->SetTimerInterval(\Portainer\Stack\Timer::UpdateInfo, $Interval);
+        if ($this->HasActiveParent()) {
+            $this->RequestState();
+        }
+    }
+
+    public function RequestState(): bool
+    {
+        $Result = $this->FetchData();
+        if (is_array($Result)) {
+            $this->SetStateVariables($Result, \Portainer\Stack\Variables::$Config);
+            return true;
+        }
+        return false;
+    }
+
+    public function StopStack(): bool
+    {
+        $Uri = \Portainer\Api\url::GetStartStopUrl($this->ReadPropertyInteger(\Portainer\Stack\Property::EnvironmentId), $this->ReadPropertyInteger(\Portainer\Stack\Property::StackId), \Portainer\Api\Url::StopStack);
+        $this->SendDebug('StopStack', $Uri, 0);
+        $Response = $this->SendDataToParent(json_encode(
+            [
+                'DataID' => \Portainer\GUID::SendToIO,
+                'URI'    => $Uri,
+                'Method' => \Portainer\Api\HTTP::POST,
+                'Data'   => [],
+                'Timeout'=> 10000
+            ]
+        ));
+        $this->SendDebug('StopStack Result', $Response, 0);
+        if ($Response !== false) {
+            $Response = unserialize($Response);
+            if (is_array($Response)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function StartStack(): bool
+    {
+        $Uri = \Portainer\Api\url::GetStartStopUrl($this->ReadPropertyInteger(\Portainer\Stack\Property::EnvironmentId), $this->ReadPropertyInteger(\Portainer\Stack\Property::StackId), \Portainer\Api\Url::StartStack);
+        $this->SendDebug('StartStack', $Uri, 0);
+        $Response = $this->SendDataToParent(json_encode(
+            [
+                'DataID' => \Portainer\GUID::SendToIO,
+                'URI'    => $Uri,
+                'Method' => \Portainer\Api\HTTP::POST,
+                'Data'   => [],
+                'Timeout'=> 10000
+            ]
+        ));
+        $this->SendDebug('StartStack Result', $Response, 0);
+        if ($Response !== false) {
+            $Response = unserialize($Response);
+            if (is_array($Response)) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private function FetchData(): bool|array
+    {
+        $Uri = \Portainer\Api\url::GetStackUrl($this->ReadPropertyInteger(\Portainer\Stack\Property::StackId));
+        $this->SendDebug('FetchData', $Uri, 0);
+        $Response = $this->SendDataToParent(json_encode(
+            [
+                'DataID' => \Portainer\GUID::SendToIO,
+                'URI'    => $Uri,
+                'Method' => \Portainer\Api\HTTP::GET,
+                'Data'   => []
+            ]
+        ));
+        $this->SendDebug('FetchData Result', $Response, 0);
+        if ($Response !== false) {
+            $Response = unserialize($Response);
+            $this->SendDebug('FetchData Data', $Response, 0);
+            return $Response;
+        }
+        return [];
+    }
+}

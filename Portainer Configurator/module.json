@@ -1,7 +1,7 @@
 {
     "id": "{781E99AA-6F79-4430-0DF5-388D82E29019}",
     "name": "Portainer Configurator",
-    "type": 3,
+    "type": 4,
     "vendor": "Portainer",
     "aliases": [],
     "parentRequirements": [

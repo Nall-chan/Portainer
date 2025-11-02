@@ -13,41 +13,26 @@ class LibraryTest extends TestCaseSymconValidation
 
     public function testValidateConfigurator(): void
     {
-        $this->validateModule(__DIR__ . '/../ONVIF Configurator');
+        $this->validateModule(__DIR__ . '/../Portainer Configurator');
     }
 
     public function testValidateIO(): void
     {
-        $this->validateModule(__DIR__ . '/../ONVIF IO');
+        $this->validateModule(__DIR__ . '/../Portainer IO');
     }
 
-    public function testValidateDiscovery(): void
+    public function testValidateStack(): void
     {
-        $this->validateModule(__DIR__ . '/../ONVIF Discovery');
+        $this->validateModule(__DIR__ . '/../Portainer Stack');
     }
 
-    public function testValidateDI(): void
+    public function testValidateSystem(): void
     {
-        $this->validateModule(__DIR__ . '/../ONVIF Digital Input');
+        $this->validateModule(__DIR__ . '/../Docker System');
     }
-    public function testValidateDO(): void
+    public function testValidateContainer(): void
     {
-        $this->validateModule(__DIR__ . '/../ONVIF Digital Output');
+        $this->validateModule(__DIR__ . '/../Docker Container');
     }
-    public function testValidateEvents(): void
-    {
-        $this->validateModule(__DIR__ . '/../ONVIF Events');
-    }
-    public function testValidateStream(): void
-    {
-        $this->validateModule(__DIR__ . '/../ONVIF Media Stream');
-    }
-    public function testValidateImage(): void
-    {
-        $this->validateModule(__DIR__ . '/../ONVIF Image Grabber');
-    }
-    public function testValidateRecording(): void
-    {
-        $this->validateModule(__DIR__ . '/../ONVIF Recording');
-    }
+
 }
