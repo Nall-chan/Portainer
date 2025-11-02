@@ -16,6 +16,3 @@ Folgende Module beinhaltet das Portainer API Repository:
 
 - __Docker System__ ([Dokumentation](Docker%20System))  
 	Kurze Beschreibung des Moduls.
-
-- __Docker Volume__ ([Dokumentation](Docker%20Volume))  
-	Kurze Beschreibung des Moduls.

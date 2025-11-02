@@ -4,9 +4,9 @@
     "author": "Michael Tröger",
     "url": "https://github.com/Nall-chan/Portainer",
     "compatibility": {
-        "version": "7.1"
+        "version": "8.1"
     },
-    "version": "0.1",
-    "build": 1,
-    "date": 0
+    "version": "0.8",
+    "build": 80,
+    "date": 1762119739
 }

@@ -65,12 +65,13 @@ class PortainerConfigurator extends IPSModuleStrict
                 unset($InstancesEnvironments[$InstanceIDEnvironment]);
             }
             $EndpointsNames[$Endpoint['Id']] = $Endpoint['Name'];
-            $Value = [
-                'id'         => $Endpoint['Id'],
-                'type'       => 'Environment',
-                'name'       => $InstanceIDEnvironment ? IPS_GetName($InstanceIDEnvironment) : $Endpoint['Name'],
-                'instanceID' => ($InstanceIDEnvironment ? $InstanceIDEnvironment : 0),
-                'create'     => [
+            $Values[] = [
+                'id'               => $Endpoint['Id'],
+                'expanded'         => true,
+                'type'             => 'Environment',
+                'name'             => $InstanceIDEnvironment ? IPS_GetName($InstanceIDEnvironment) : $Endpoint['Name'],
+                'instanceID'       => ($InstanceIDEnvironment ? $InstanceIDEnvironment : 0),
+                'create'           => [
                     'moduleID'      => \Portainer\GUID::System,
                     'configuration' => [
                         \Docker\System\Property::EnvironmentId  => $Endpoint['Id'],
@@ -79,16 +80,15 @@ class PortainerConfigurator extends IPSModuleStrict
                 ]
 
             ];
-            $Values[] = $Value;
             $InstancesContainers = $this->GetContainerIPSInstances($Endpoint['Id']);
             foreach ($Endpoint['Snapshots'][0]['DockerSnapshotRaw']['Containers'] as $Container) {
                 $InstanceIDContainer = array_search(substr($Container['Names'][0], 1), $InstancesContainers);
-                $ContainerValue['parent'] = $Endpoint['Id'];
-                $ContainerValue['type'] = 'Container';
-                $ContainerValue['instanceID'] = $InstanceIDContainer ? $InstanceIDContainer : 0;
-                $ContainerValue['name'] = $InstanceIDContainer ? IPS_GetName($InstanceIDContainer) : substr($Container['Names'][0], 1); // remove leading slash
-                $ContainerValue['create'] =
-                    [
+                $Values[] = [
+                    'parent'     => $Endpoint['Id'],
+                    'type'       => 'Container',
+                    'instanceID' => $InstanceIDContainer ? $InstanceIDContainer : 0,
+                    'name'       => $InstanceIDContainer ? IPS_GetName($InstanceIDContainer) : substr($Container['Names'][0], 1), // remove leading slash
+                    'create'     => [
                         'moduleID'      => \Portainer\GUID::Container,
                         'location'      => [$Endpoint['Name']],
                         'configuration' => [
@@ -96,16 +96,48 @@ class PortainerConfigurator extends IPSModuleStrict
                             \Docker\Container\Property::ContainerName   => substr($Container['Names'][0], 1), // remove leading slash
                             \Docker\Container\Property::UpdateInterval  => ($InstanceIDContainer ? IPS_GetProperty($InstanceIDContainer, \Docker\Container\Property::UpdateInterval) : 5)
                         ]
-                    ];
-                $Values[] = $ContainerValue;
+                    ]
+                ];
                 if ($InstanceIDContainer) {
                     unset($AllInstancesContainers[$InstanceIDContainer]);
                     unset($InstancesContainers[$InstanceIDContainer]);
                 }
             }
-            // todo $InstancesContainers containers that do not exist in Portainer
+            foreach ($InstancesContainers as $InstanceIDContainer => $Container) {
+                unset($AllInstancesContainers[$InstanceIDContainer]);
+                $Values[] = [
+                    'parent'     => $Endpoint['Id'],
+                    'type'       => 'Container',
+                    'instanceID' => $InstanceIDContainer,
+                    'name'       => IPS_GetName($InstanceIDContainer)
+                ];
+            }
         }
+        foreach ($InstancesEnvironments as $InstanceIDEnvironments => $EnvironmentId) {
+            $Value = [
+                'id'         => $EnvironmentId,
+                'expanded'   => true,
+                'type'       => 'Environment',
+                'instanceID' => $InstanceIDEnvironments,
+                'name'       => IPS_GetName($InstanceIDEnvironments)
+            ];
+            $Values[] = $Value;
+            $EndpointsNames[$EnvironmentId] = IPS_GetName($InstanceIDEnvironments);
+        }
+        foreach ($AllInstancesContainers as $InstanceIDContainer => $Container) {
+            $EndpointId = IPS_GetProperty($InstanceIDContainer, \Docker\Container\Property::EnvironmentId);
 
+            $Value = [
+                'type'       => 'Container',
+                'instanceID' => $InstanceIDContainer,
+                'name'       => IPS_GetName($InstanceIDContainer)
+            ];
+
+            if (isset($EndpointsNames[$EndpointId])) {
+                $Value['parent'] = $EndpointId;
+            }
+            $Values[] = $Value;
+        }
         $InstancesStacks = $this->GetStackIPSInstances();
         $ListStacks = $this->ListStacks();
         foreach ($ListStacks as $Stack) {
@@ -120,8 +152,8 @@ class PortainerConfigurator extends IPSModuleStrict
                         'name'           => IPS_GetName($InstanceIDStack),
                         'instanceID'     => $InstanceIDStack,
                     ];
-                    if (isset($EndpointsNames[$Stack['EndpointId']])) {
-                        $Value['parent'] = $Stack['EndpointId'];
+                    if (isset($EndpointsNames[$StackEndpointId])) {
+                        $Value['parent'] = $StackEndpointId;
                     }
                     $Values[] = $Value;
                     $InstanceIDStack = 0;
@@ -145,9 +177,19 @@ class PortainerConfigurator extends IPSModuleStrict
                 ]
             ];
         }
-        // todo $InstancesStacks Stacks that do not exist in Portainer
-        // todo $InstancesEnvironments Environments that do not exist in Portainer
-        // todo $AllInstancesContainers containers that do not exist in Portainer
+        foreach ($InstancesStacks as $InstanceIDStack => $Stack) {
+            $EndpointId = IPS_GetProperty($InstanceIDContainer, \Portainer\Stack\Property::EnvironmentId);
+            $Value = [
+                'type'       => 'Stack',
+                'instanceID' => $InstanceIDStack,
+                'name'       => IPS_GetName($InstanceIDStack)
+            ];
+            if (isset($EndpointsNames[$EndpointId])) {
+                $Value['parent'] = $EndpointId;
+            }
+            $Values[] = $Value;
+        }
+
         $this->SendDebug('Values', $Values, 0);
         $Form['actions'][0]['values'] = $Values;
         $this->SendDebug('FORM', json_encode($Form), 0);

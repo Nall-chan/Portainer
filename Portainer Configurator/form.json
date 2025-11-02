@@ -11,6 +11,11 @@
             },
             "columns": [
                 {
+                    "caption": "Id",
+                    "name": "id",
+                    "width": "80px"
+                },
+                {
                     "caption": "Type",
                     "name": "type",
                     "width": "200px"
