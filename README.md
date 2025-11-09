@@ -8,7 +8,7 @@
 [![PayPal.Me](https://img.shields.io/badge/PayPal-Me-lightblue.svg)](#3-spenden)
 [![Wunschliste](https://img.shields.io/badge/Wunschliste-Amazon-ff69fb.svg)](#3-spenden)  
 
-# Portainer API <!-- omit in toc -->  
+# Portainer <!-- omit in toc -->  
 
 ## Inhaltsverzeichnis <!-- omit in toc -->
 - [1. Vorbemerkungen](#1-vorbemerkungen)
@@ -30,7 +30,7 @@ Sie wurde entwickelt um eine einfache Überwachung von laufenden Containern zu e
 
 ## 2. Voraussetzungen
 
- - IPS 8.1 oder höher
+ - IP-Symcon ab Version 8.1
  - Portainer Installation
 
 ## 3. Enthaltende Module
