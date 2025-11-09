@@ -31,6 +31,7 @@ class PortainerConfigurator extends IPSModuleStrict
         //Never delete this line!
         parent::ApplyChanges();
     }
+
     public function GetConfigurationForm(): string
     {
         $Form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
@@ -218,6 +219,7 @@ class PortainerConfigurator extends IPSModuleStrict
         }
         return [];
     }
+
     private function ListStacks(): array
     {
         $this->SendDebug('ListStacks Get', \Portainer\Api\Url::ListStacks, 0);
@@ -239,6 +241,7 @@ class PortainerConfigurator extends IPSModuleStrict
         }
         return [];
     }
+
     private function GetEnvironmentIPSInstances(): array
     {
         $Environments = [];
@@ -248,6 +251,7 @@ class PortainerConfigurator extends IPSModuleStrict
         }
         return array_filter($Environments);
     }
+
     private function GetContainerIPSInstances(int $EnvironmentId = -1): array
     {
         $Environments = [];
@@ -260,6 +264,7 @@ class PortainerConfigurator extends IPSModuleStrict
         }
         return array_filter($Environments);
     }
+
     private function GetStackIPSInstances(): array
     {
         $Stacks = [];
@@ -269,6 +274,7 @@ class PortainerConfigurator extends IPSModuleStrict
         }
         return array_filter($Stacks);
     }
+
     private function FilterInstancesByConnection(int $InstanceID): bool
     {
         return IPS_GetInstance($InstanceID)['ConnectionID'] == IPS_GetInstance($this->InstanceID)['ConnectionID'];

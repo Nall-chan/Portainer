@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Enthält Klassen welche die API und Geräte Fähigkeiten abbilden.
  *
  * @author        Michael Tröger <micha@nall-chan.net>
- * @copyright     2024 Michael Tröger
+ * @copyright     2025 Michael Tröger
  * @license       https://creativecommons.org/licenses/by-nc-sa/4.0/ CC BY-NC-SA 4.0
  *
  * @version       1.0
@@ -15,11 +15,6 @@ declare(strict_types=1);
 
 namespace Portainer\Api
 {
-    /*
-    const ErrorCode = 'errorCode';
-    const Message = 'msg';
-    const Result = 'result';
-     */
     class HTTP
     {
         public const GET = 'GET';
@@ -27,6 +22,7 @@ namespace Portainer\Api
         public const POST = 'POST';
         public const DELETE = 'DELETE';
     }
+
     class Url
     {
         public const Auth = '/auth';
@@ -54,14 +50,17 @@ namespace Portainer\Api
         {
             return sprintf(self::GetStack, $StackId);
         }
+
         public static function GetStartStopUrl(int $EndpointId, int $StackId, string $StartStopUrl): string
         {
             return self::GetStackUrl($StackId) . sprintf($StartStopUrl, $EndpointId);
         }
+
         public static function GetEndpointUrl(int $EndpointId): string
         {
             return sprintf(self::Endpoint, $EndpointId);
         }
+
         public static function GetDashboardUrl(int $EndpointId): string
         {
             return sprintf(self::Dashboard, $EndpointId);
@@ -71,147 +70,12 @@ namespace Portainer\Api
         {
             return self::GetEndpointUrl($EndpointId) . self::ListDockerContainers;
         }
+
         public static function GetDockerContainerUrl(int $EndpointId, string $ContainerId, string $ContainerUrl): string
         {
             return self::GetEndpointUrl($EndpointId) . sprintf($ContainerUrl, $ContainerId);
         }
 
-    }
-
-    /*
-    class Method
-    {
-        // Connection
-        public const Handshake = 'handshake';
-        public const Login = 'login_device';
-
-        public const MultipleRequest = 'multipleRequest';
-
-        // Get/Set Values
-        public const GetDeviceInfo = 'get_device_info';
-        public const SetDeviceInfo = 'set_device_info';
-
-        // Get/Set Time
-        public const GetDeviceTime = 'get_device_time';
-        public const SetDeviceTime = 'set_device_time';
-
-        // Get Energy Values
-        public const GetCurrentPower = 'get_current_power';
-        public const GetEnergyUsage = 'get_energy_usage';
-
-        // not used (now)
-        public const GetDeviceUsage = 'get_device_usage';
-        public const SetLightingEffect = 'set_lighting_effect';
-
-        // not working :(
-        //public const Reboot = 'reboot';
-        //public const SetRelayState = 'set_relay_state'; // 'state' => int
-        //public const SetLedOff = 'set_led_off'; //array 'off'=>int
-        //public const GetLightState = 'get_light_state';
-
-        // Control Child
-        public const GetChildDeviceList = 'get_child_device_list';
-        public const GetChildDeviceComponentList = 'get_child_device_component_list';
-        public const ControlChild = 'control_child';
-
-        //get_child_device_component_list
-
-        public const CountdownRule = 'add_countdown_rule'; // todo wie löschen?
-    }
-
-    class Param
-    {
-        public const Username = 'username';
-        public const Password = 'password';
-    }
-
-    class Result
-    {
-        public const Nickname = 'nickname';
-        public const Response = 'response';
-        public const EncryptedKey = 'key';
-        public const Ip = 'ip';
-        public const Mac = 'mac';
-        public const DeviceType = 'device_type';
-        public const Type = 'type';
-        public const DeviceModel = 'device_model';
-        public const Model = 'model';
-        public const DeviceID = 'device_id';
-        public const MGT = 'mgt_encrypt_schm';
-        public const Protocol = 'encrypt_type';
-        public const ChildList = 'child_device_list';
-        public const Position = 'position';
-        public const SlotNumber = 'slot_number';
-        public const ResponseData = 'responseData';
-        public const Category = 'category';
-    }
-     */
-    class Protocol
-    {
-        /*        public const Method = 'method';
-                public const Params = 'params';
-                private const ParamHandshakeKey = 'key';
-                private const DiscoveryKey = 'rsa_key';
-                private const requestTimeMils = 'requestTimeMils';
-                private const TerminalUUID = 'terminalUUID';
-         */
-        /*
-            public static $ErrorCodes = [
-                0      => 'Success',
-                -1001  => 'Invalid parameter',
-                -1005	 => 'Operation forbidden',
-                -44106 => 'The client id or client secret is invalid',
-                -44107 => 'The response type is invalid',
-                -44108	=> 'The CSRF token is invalid',
-                -44109	=> 'The session id is invalid',
-                -44110	=> 'The auth code has expired',
-                -44111	=> 'The grant type is invalid',
-                -44112	=> 'The access token has expired. Please re-initiate the refreshToken process to obtain the access token.',
-                -44113	=> 'The access token is Invalid',
-                -44114	=> 'The refresh token has expired. Please re-initiate the authentication process to obtain the refresh token.',
-                -44116	=> 'Open API authorized failed, please check whether the input parameters are legal.',
-                -44118	=> 'This interface only supports the authorization code mode, not the client credentials mode.'
-            ];
-         */
-        /*
-                public static function BuildHandshakeRequest(string $publicKey): string
-                {
-                    return json_encode([
-                        self::Method=> Method::Handshake,
-                        self::Params=> [
-                            self::ParamHandshakeKey          => mb_convert_encoding($publicKey, 'ISO-8859-1', 'UTF-8')
-                        ],
-                        self::requestTimeMils => 0
-
-                    ]);
-                }
-
-                public static function BuildRequest(string $Method, string $TerminalUUID = '', array $Params = []): array
-                {
-                    $Request = [
-                        self::Method          => $Method,
-                        self::requestTimeMils => 0 //(round(time() * 1000))
-                    ];
-                    if ($TerminalUUID) {
-                        $Request[self::TerminalUUID] = $TerminalUUID;
-                    }
-                    if (count($Params)) {
-                        $Request[self::Params] = $Params;
-                        //$Request[self::requestTimeMils] = 0;
-                    }
-
-                    return $Request;
-                }
-
-                public static function BuildDiscoveryRequest(string $publicKey): string
-                {
-                    return json_encode([
-                        self::Params=> [
-                            self::DiscoveryKey=> mb_convert_encoding($publicKey, 'ISO-8859-1', 'UTF-8')
-                        ]
-                    ]);
-                }
-         */
     }
 }
 
@@ -233,6 +97,7 @@ namespace Portainer
     const IPSVarType = 'VarType';
     const IPSVarAction = 'VarAction';
     const ArrayIndex = 'ArrayIndex';
+
     class Presentation
     {
         public static function TranslateValue(string $Text): string
@@ -253,6 +118,7 @@ namespace Portainer
             }
             return $Text;
         }
+
         public static function TranslatePresentation(array $Presentation): array
         {
 
@@ -286,6 +152,7 @@ namespace Portainer
             }
             return $Presentation;
         }
+
         private static function GetPresentationTranslation(): array
         {
             return json_decode(file_get_contents(__DIR__ . '/locale.json'), true);
@@ -450,7 +317,6 @@ namespace Docker\System
 
 namespace Docker\Container
 {
-
     class Property
     {
         public const EnvironmentId = 'EnvironmentId';
@@ -732,6 +598,7 @@ namespace Portainer\Stack
     {
         public const UpdateInfo = 'UpdateInfo';
     }
+
     class Variables
     {
         public const Name = 'Name';

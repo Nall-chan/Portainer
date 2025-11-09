@@ -8,8 +8,6 @@ require_once dirname(__DIR__) . '/libs/PortainerLib.php';
 
 /**
  * @method bool SendDebug(string $Message, mixed $Data, int $Format)
- *
- * @property string $Host
  */
 class DockerContainer extends IPSModuleStrict
 {
@@ -73,46 +71,69 @@ class DockerContainer extends IPSModuleStrict
                         return;
                     case 'running':
                         if ($OldState == 'paused') {
-                            $Uri = \Portainer\Api\Url::DockerContainerUnpause;
+                            $this->UnpauseContainer();
                         } else {
-                            $Uri = \Portainer\Api\Url::DockerContainerStart;
+                            $this->StartContainer();
                         }
                         break;
                     case 'paused':
-                        $Uri = \Portainer\Api\Url::DockerContainerPause;
+                        $this->PauseContainer();
                         break;
                     case 'restarting':
-                        $Uri = \Portainer\Api\Url::DockerContainerRestart;
+                        $this->PauseContainer();
                         break;
                     case 'removing':
                         echo 'Removing container is not supported.';
                         return;
                     case 'exited':
-                        $Uri = \Portainer\Api\Url::DockerContainerStop;
+                        $this->StopContainer();
                         break;
                     case 'dead':
-                        $Uri = \Portainer\Api\Url::DockerContainerKill;
+                        $this->KillContainer();
                         break;
                     default:
                         throw new Exception('Invalid Value for Status Action');
                 }
-                $Uri = \Portainer\Api\url::GetDockerContainerUrl($this->ReadPropertyInteger(\Docker\Container\Property::EnvironmentId), $this->ReadPropertyString(\Docker\Container\Property::ContainerName), $Uri);
-                $this->SendDebug('RequestAction Status', $Uri, 0);
-                $Response = $this->SendDataToParent(json_encode(
-                    [
-                        'DataID' => \Portainer\GUID::SendToIO,
-                        'URI'    => $Uri,
-                        'Method' => \Portainer\Api\HTTP::POST,
-                        'Data'   => []
-                    ]
-                ));
-                $this->SendDebug('RequestAction Status Result', $Response, 0);
-                //01.11.2025, 15:32:08 | RequestAction Status Result | a:1:{s:7:"message";s:125:"cannot kill container: AdGuardHome: container 343c962e6bdabf4250d9f86b4fc1b88c18a0327292fef6c441b3ab0edc3b6f83 is not running";}
-
                 break;
             default:
                 throw new Exception('Invalid Ident');
         }
+    }
+
+    public function StartContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerStart;
+        return $this->PostAction($Uri);
+    }
+
+    public function StopContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerStop;
+        return $this->PostAction($Uri);
+    }
+
+    public function PauseContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerPause;
+        return $this->PostAction($Uri);
+    }
+
+    public function UnpauseContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerUnpause;
+        return $this->PostAction($Uri);
+    }
+
+    public function RestartContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerRestart;
+        return $this->PostAction($Uri);
+    }
+
+    public function KillContainer(): bool
+    {
+        $Uri = \Portainer\Api\Url::DockerContainerKill;
+        return $this->PostAction($Uri);
     }
 
     protected function AdjustSpecialValues(string $Key, mixed &$Data): void
@@ -147,5 +168,29 @@ class DockerContainer extends IPSModuleStrict
             return $Response;
         }
         return [];
+    }
+
+    private function PostAction(string $Uri): bool
+    {
+
+        $Uri = \Portainer\Api\url::GetDockerContainerUrl($this->ReadPropertyInteger(\Docker\Container\Property::EnvironmentId), $this->ReadPropertyString(\Docker\Container\Property::ContainerName), $Uri);
+        $this->SendDebug('PostAction', $Uri, 0);
+        $Response = $this->SendDataToParent(json_encode(
+            [
+                'DataID' => \Portainer\GUID::SendToIO,
+                'URI'    => $Uri,
+                'Method' => \Portainer\Api\HTTP::POST,
+                'Data'   => []
+            ]
+        ));
+        $this->SendDebug('PostAction Result', $Response, 0);
+        if ($Response !== false) {
+            $Response = unserialize($Response);
+            if (is_bool($Response)) {
+                IPS_RunScriptText('IPS_Sleep(1000);PORTAINER_RequestState(' . $this->InstanceID . ');');
+                return $Response;
+            }
+        }
+        return false;
     }
 }

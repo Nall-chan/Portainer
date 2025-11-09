@@ -19,6 +19,7 @@ class PortainerIO extends IPSModuleStrict
     public const IS_NotReachable = IS_EBASE + 1;
     public const IS_Unauthorized = IS_EBASE + 2;
     public const IS_ConnectionLost = IS_EBASE + 5;
+
     private static $CURL_error_codes = [
         0  => 'UNKNOWN ERROR',
         1  => 'CURLE_UNSUPPORTED_PROTOCOL',
@@ -99,6 +100,7 @@ class PortainerIO extends IPSModuleStrict
         87 => 'CURLE_FTP_BAD_FILE_LIST',
         88 => 'CURLE_CHUNK_FAILED'
     ];
+
     private static $http_error =
         [
             400 => 'Bad Request',
@@ -147,6 +149,7 @@ class PortainerIO extends IPSModuleStrict
         }
 
     }
+
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
@@ -168,6 +171,7 @@ class PortainerIO extends IPSModuleStrict
         echo $errstr . PHP_EOL;
         return true;
     }
+
     private function Login(): bool
     {
         $Data = [
@@ -181,11 +185,13 @@ class PortainerIO extends IPSModuleStrict
         }
         return (bool) $Result;
     }
+
     private function UpdateToken(array $TokenData): void
     {
         $this->WriteAttributeString(\Portainer\IO\Attribute::Token, $TokenData[\Portainer\IO\Attribute::Token]);
         $this->SetTimerInterval(\Portainer\IO\Timer::UpdateToken, 7 * 60 * 60 * 1000);
     }
+
     private function SendRequest(string $RequestURL, string $RequestMethod = \Omada\HTTP::GET, array $PostData = [], int $Timeout = 5000, array $RequestHeader = []): bool|array
     {
         /** @var array $_IPS */
@@ -278,13 +284,15 @@ class PortainerIO extends IPSModuleStrict
                 break;
             case 403:
                 $this->SetStatus(self::IS_Unauthorized);
+                // Ebenso wie bei 401 noch einmal versuchen anzumelden
                 // No break. Add additional comment above this line if intentional
             case 401:
-                if (strpos($RequestURL, \Portainer\Api\Url::Auth) !== 0) {
+                if (strpos($RequestURL, \Portainer\Api\Url::Auth) !== 0) { //Beim fehlerhaften Login kein weiterer Versuch
                     if ($this->Login()) {
                         return $this->SendRequest($RequestURL, $RequestMethod, $PostData, $Timeout, $RequestHeader);
                     }
                 }
+                // Wenn kein Login oder Login nicht erfolgreich, dann weiter mit Ausgabe der Fehlermeldung
                 // No break. Add additional comment above this line if intentional
             case 405:
             case 413:
@@ -301,23 +309,7 @@ class PortainerIO extends IPSModuleStrict
             return $Result;
         }
         $Data = json_decode($Result, true);
-        /*
-        if ($Data[\Omada\Api\ErrorCode] != 0) {
-            if ($Data[\Omada\Api\ErrorCode] == -44112) {
-                if ($this->RefreshToken()) {
-                    return $this->SendRequest($RequestURL, $RequestMethod, $PostData, $Timeout, $RequestHeader);
-                }
-            }
-            $this->SendDebug('Error:' . $Data[\Omada\Api\ErrorCode], $Data[\Omada\Api\Message], 0);
-            trigger_error($this->Translate(\Omada\Api\Protocol::$ErrorCodes[$Data[\Omada\Api\ErrorCode]]), E_USER_WARNING);
-            if (!isset($Data['result'])) {
-                $Data['result'] = false;
-            }
-            $this->SetStatus(self::IS_ConnectionLost);
-        }
-         */
         restore_error_handler();
-        //return $Data['result'];
         if ($Data) {
             return $Data;
         }

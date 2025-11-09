@@ -8,8 +8,6 @@ require_once dirname(__DIR__) . '/libs/PortainerLib.php';
 
 /**
  * @method bool SendDebug(string $Message, mixed $Data, int $Format)
- *
- * @property string $Host
  */
 class PortainerStack extends IPSModuleStrict
 {
