@@ -1,8 +1,6 @@
 [![SDK](https://img.shields.io/badge/Symcon-PHPModul-red.svg)](https://www.symcon.de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/)
-[![Module Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FNall-chan%2FPortainer%2Frefs%2Fheads%2Fmaster%2Flibrary.json&query=%24.version&label=Modul%20Version&color=blue)
-]()
-[![Symcon Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FNall-chan%2FPortainer%2Frefs%2Fheads%2Fmaster%2Flibrary.json&query=%24.compatibility.version&suffix=%3E&label=Symcon%20Version&color=green)
-](https://www.symcon.de/de/service/dokumentation/installation/migrationen/v80-v81-q3-2025/)  
+[![Module Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FNall-chan%2FPortainer%2Frefs%2Fheads%2Fmaster%2Flibrary.json&query=%24.version&label=Modul%20Version&color=blue)](https://community.symcon.de/t/modul-portainer/142355)
+[![Symcon Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FNall-chan%2FPortainer%2Frefs%2Fheads%2Fmaster%2Flibrary.json&query=%24.compatibility.version&suffix=%3E&label=Symcon%20Version&color=green)](https://www.symcon.de/de/service/dokumentation/installation/migrationen/v80-v81-q3-2025/)  
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-green.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Check Style](https://github.com/Nall-chan/Portainer/workflows/Check%20Style/badge.svg)](https://github.com/Nall-chan/Portainer/actions) [![Run Tests](https://github.com/Nall-chan/Portainer/workflows/Run%20Tests/badge.svg)](https://github.com/Nall-chan/Portainer/actions)  
 [![PayPal.Me](https://img.shields.io/badge/PayPal-Me-lightblue.svg)](#3-spenden)
@@ -11,6 +9,7 @@
 # Portainer <!-- omit in toc -->  
 
 ## Inhaltsverzeichnis <!-- omit in toc -->
+
 - [1. Vorbemerkungen](#1-vorbemerkungen)
 - [2. Voraussetzungen](#2-voraussetzungen)
 - [3. Enthaltende Module](#3-enthaltende-module)
@@ -23,6 +22,7 @@
 - [7. Lizenz](#7-lizenz)
 
 ----------
+
 ## 1. Vorbemerkungen
 
 Diese Library enthält nur wenige Funktionen der sehr umfangreichen Portainer API.  
@@ -30,32 +30,32 @@ Sie wurde entwickelt um eine einfache Überwachung von laufenden Containern zu e
 
 ## 2. Voraussetzungen
 
- - IP-Symcon ab Version 8.1
- - Portainer Installation
+- IP-Symcon ab Version 8.1
+- Portainer Installation
 
 ## 3. Enthaltende Module
 
 Folgende Module beinhaltet die Portainer Bibliothek:
 
 - __Portainer Konfigurator__ ([Dokumentation](Portainer%20Configurator/README.md))  
-	Konfigurator welcher das einfache anlegen von Stack, Container und System Instanzen erlaubt.  
+  Konfigurator welcher das einfache anlegen von Stack, Container und System Instanzen erlaubt.  
 
 - __Portainer IO__ ([Dokumentation](Portainer%20IO/README.md))  
-	IO Instanz zur Kommunikation mit Portainer.  
+  IO Instanz zur Kommunikation mit Portainer.  
 
 - __Portainer Stack__ ([Dokumentation](Portainer%20Stack/README.md))  
-	Instanz welche einen Stack von Portainer abbildet.  
+  Instanz welche einen Stack von Portainer abbildet.  
 
 - __Docker Container__ ([Dokumentation](Docker%20Container/README.md))  
-	Instanz welche einen Docker Container in abbildet.  
+  Instanz welche einen Docker Container in abbildet.  
 
 - __Docker System__ ([Dokumentation](Docker%20System/README.md))  
-	Instanz welche ein Docker Environment abbildet.  
+  Instanz welche ein Docker Environment abbildet.  
 
 ## 4. Software-Installation
 
   Über den `Module-Store` in IPS das Modul `Portainer` hinzufügen.  
-   **Bei kommerzieller Nutzung (z.B. als Errichter oder Integrator) wenden Sie sich bitte an den Autor.**  
+  __Bei kommerzieller Nutzung (z.B. als Errichter oder Integrator) wenden Sie sich bitte an den Autor.__ 
 
 ![Module-Store](imgs/install.png)  
 
@@ -73,9 +73,8 @@ Sind die Eingaben korrekt, so wird der [Portainer Konfigurator](Portainer%20Conf
 
 ## 6. Anhang
 
-###  1. GUID der Module
- 
- 
+### 1. GUID der Module
+
 | Modul                  | Typ          | Prefix    | GUID                                   |
 | ---------------------- | ------------ | --------- | -------------------------------------- |
 | Portainer IO           | IO           | PORTAINER | {FEB4D3D2-AD8A-9C6A-72D8-DF99AC625768} |
@@ -86,8 +85,9 @@ Sind die Eingaben korrekt, so wird der [Portainer Konfigurator](Portainer%20Conf
 
 ### 2. Changelog
 
-  **Version 0.8:**  
- - Start der Beta Version  
+__Version 0.8:__  
+
+- Start der Beta Version  
 
 ### 3. Spenden  
   
@@ -95,8 +95,9 @@ Sind die Eingaben korrekt, so wird der [Portainer Konfigurator](Portainer%20Conf
 
 [![PayPal.Me](https://img.shields.io/badge/PayPal-Me-lightblue.svg)](https://paypal.me/Nall4chan)  
 
-[![Wunschliste](https://img.shields.io/badge/Wunschliste-Amazon-ff69fb.svg)](https://www.amazon.de/hz/wishlist/ls/YU4AI9AQT9F?ref_=wl_share) 
+[![Wunschliste](https://img.shields.io/badge/Wunschliste-Amazon-ff69fb.svg)](https://www.amazon.de/hz/wishlist/ls/YU4AI9AQT9F?ref_=wl_share)
 
 ## 7. Lizenz
 
-  [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
+  [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+  

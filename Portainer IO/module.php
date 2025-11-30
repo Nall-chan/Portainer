@@ -235,7 +235,6 @@ class PortainerIO extends IPSModuleStrict
             $this->SendDebug('Header Send:' . $_IPS['THREAD'], curl_getinfo($ch)['request_header'], 0);
         }
         $curl_errno = curl_errno($ch);
-        curl_close($ch);
         $Header = '';
         $Result = '';
         if (!is_bool($response)) {
