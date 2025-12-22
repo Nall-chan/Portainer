@@ -16,9 +16,9 @@
 - [4. Software-Installation](#4-software-installation)
 - [5. Einrichten der Instanzen in IP-Symcon](#5-einrichten-der-instanzen-in-ip-symcon)
 - [6. Anhang](#6-anhang)
-	- [1. GUID der Module](#1-guid-der-module)
-	- [2. Changelog](#2-changelog)
-	- [3. Spenden](#3-spenden)
+  - [1. GUID der Module](#1-guid-der-module)
+  - [2. Changelog](#2-changelog)
+  - [3. Spenden](#3-spenden)
 - [7. Lizenz](#7-lizenz)
 
 ----------
@@ -55,7 +55,7 @@ Folgende Module beinhaltet die Portainer Bibliothek:
 ## 4. Software-Installation
 
   Über den `Module-Store` in IPS das Modul `Portainer` hinzufügen.  
-  __Bei kommerzieller Nutzung (z.B. als Errichter oder Integrator) wenden Sie sich bitte an den Autor.__ 
+  __Bei kommerzieller Nutzung (z.B. als Errichter oder Integrator) wenden Sie sich bitte an den Autor.__  
 
 ![Module-Store](imgs/install.png)  
 

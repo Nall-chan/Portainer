@@ -123,7 +123,7 @@ class PortainerIO extends IPSModuleStrict
         $this->RegisterPropertyString(\Portainer\IO\Property::Username, '');
         $this->RegisterPropertyString(\Portainer\IO\Property::Password, '');
         $this->RegisterAttributeString(\Portainer\IO\Attribute::Token, '');
-        $this->RegisterTimer(\Portainer\IO\Timer::UpdateToken, 0, 'PORTAINER_UpdateToken($_IPS[\'TARGET\']);');
+        $this->RegisterTimer(\Portainer\IO\Timer::UpdateToken, 0, 'IPS_RequestAction($_IPS[\'TARGET\'],\'UpdateToken\' , 0);');
         $this->Host = '';
     }
 
