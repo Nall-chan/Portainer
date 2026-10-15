@@ -40,5 +40,22 @@
                 }
             ]
         }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Instance is not configured"
+        },
+        {
+            "code": 201,
+            "icon": "error",
+            "caption": "Environment not found"
+        },
+        {
+            "code": 202,
+            "icon": "error",
+            "caption": "Request failed"
+        }
     ]
 }

@@ -11,8 +11,8 @@
             },
             "columns": [
                 {
-                    "caption": "Id",
-                    "name": "id",
+                    "caption": "ID",
+                    "name": "portainerId",
                     "width": "80px"
                 },
                 {

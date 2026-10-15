@@ -19,6 +19,10 @@
             ]
         },
         {
+            "type": "Label",
+            "caption": "Login requires either username and password or an API token.\nIf an API token is entered, username and password are not used."
+        },
+        {
             "type": "RowLayout",
             "items": [
                 {
@@ -34,6 +38,19 @@
                     "width": "300px"
                 }
             ]
+        },
+        {
+            "name": "ApiKey",
+            "type": "PasswordTextBox",
+            "caption": "API token",
+            "width": "300px",
+            "onChange": "IPS_RequestAction($id, 'ApiKeyChanged', $ApiKey);"
+        },
+        {
+            "name": "VerifyCertificate",
+            "type": "CheckBox",
+            "caption": "Verify TLS certificate",
+            "width": "300px"
         }
     ],
     "actions": [
@@ -77,6 +94,11 @@
             "code": 202,
             "icon": "error",
             "caption": "Unauthorized"
+        },
+        {
+            "code": 203,
+            "icon": "error",
+            "caption": "Host is missing"
         },
         {
             "code": 205,

@@ -2,7 +2,16 @@
     "translations": {
         "de": {
             "Portainer Configurator": "Portainer Konfigurator",
+            "ID": "ID",
             "Type": "Typ",
+            "Name": "Name",
+            "Environment": "Environment",
+            "Environment (not supported)": "Environment (nicht unterstützt)",
+            "Container": "Container",
+            "Stack": "Stack",
+            "Instance has no active parent.": "Instanz hat keinen aktiven Parent.",
+            "Could not read data from Portainer.": "Daten von Portainer konnten nicht gelesen werden.",
+            "Containers of environment %s are not available.": "Die Container des Environments %s sind nicht verfügbar.",
             "This module is free for non-commercial use,\r\nDonations in support of the author are accepted here:": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos,\r\nSchenkungen als Unterstützung für den Autor werden hier akzeptiert:"
         }
     }

@@ -7,9 +7,13 @@ eval('declare(strict_types=1);namespace PortainerIO {?>' . file_get_contents(dir
 require_once dirname(__DIR__) . '/libs/PortainerLib.php';
 
 /**
+ * PortainerIO
+ * IO-Instanz für die Kommunikation mit der Portainer API.
+ * Meldet sich per Benutzername/Passwort an und leitet die Anfragen der Kind-Instanzen weiter.
+ *
  * @method bool SendDebug(string $Message, mixed $Data, int $Format)
  *
- * @property string $Host
+ * @property string $Host Basis-URL von Portainer ohne abschließenden Slash, leer wenn die Instanz geschlossen ist
  */
 class PortainerIO extends IPSModuleStrict
 {
@@ -18,101 +22,20 @@ class PortainerIO extends IPSModuleStrict
 
     public const IS_NotReachable = IS_EBASE + 1;
     public const IS_Unauthorized = IS_EBASE + 2;
+    public const IS_InvalidHost = IS_EBASE + 3;
     public const IS_ConnectionLost = IS_EBASE + 5;
 
-    private static $CURL_error_codes = [
-        0  => 'UNKNOWN ERROR',
-        1  => 'CURLE_UNSUPPORTED_PROTOCOL',
-        2  => 'CURLE_FAILED_INIT',
-        3  => 'CURLE_URL_MALFORMAT',
-        4  => 'CURLE_URL_MALFORMAT_USER',
-        5  => 'CURLE_COULDNT_RESOLVE_PROXY',
-        6  => 'CURLE_COULDNT_RESOLVE_HOST',
-        7  => 'CURLE_COULDNT_CONNECT',
-        8  => 'CURLE_FTP_WEIRD_SERVER_REPLY',
-        9  => 'CURLE_REMOTE_ACCESS_DENIED',
-        11 => 'CURLE_FTP_WEIRD_PASS_REPLY',
-        13 => 'CURLE_FTP_WEIRD_PASV_REPLY',
-        14 => 'CURLE_FTP_WEIRD_227_FORMAT',
-        15 => 'CURLE_FTP_CANT_GET_HOST',
-        17 => 'CURLE_FTP_COULDNT_SET_TYPE',
-        18 => 'CURLE_PARTIAL_FILE',
-        19 => 'CURLE_FTP_COULDNT_RETR_FILE',
-        21 => 'CURLE_QUOTE_ERROR',
-        22 => 'CURLE_HTTP_RETURNED_ERROR',
-        23 => 'CURLE_WRITE_ERROR',
-        25 => 'CURLE_UPLOAD_FAILED',
-        26 => 'CURLE_READ_ERROR',
-        27 => 'CURLE_OUT_OF_MEMORY',
-        28 => 'CURLE_OPERATION_TIMEDOUT',
-        30 => 'CURLE_FTP_PORT_FAILED',
-        31 => 'CURLE_FTP_COULDNT_USE_REST',
-        33 => 'CURLE_RANGE_ERROR',
-        34 => 'CURLE_HTTP_POST_ERROR',
-        35 => 'CURLE_SSL_CONNECT_ERROR',
-        36 => 'CURLE_BAD_DOWNLOAD_RESUME',
-        37 => 'CURLE_FILE_COULDNT_READ_FILE',
-        38 => 'CURLE_LDAP_CANNOT_BIND',
-        39 => 'CURLE_LDAP_SEARCH_FAILED',
-        41 => 'CURLE_FUNCTION_NOT_FOUND',
-        42 => 'CURLE_ABORTED_BY_CALLBACK',
-        43 => 'CURLE_BAD_FUNCTION_ARGUMENT',
-        45 => 'CURLE_INTERFACE_FAILED',
-        47 => 'CURLE_TOO_MANY_REDIRECTS',
-        48 => 'CURLE_UNKNOWN_TELNET_OPTION',
-        49 => 'CURLE_TELNET_OPTION_SYNTAX',
-        51 => 'CURLE_PEER_FAILED_VERIFICATION',
-        52 => 'CURLE_GOT_NOTHING',
-        53 => 'CURLE_SSL_ENGINE_NOTFOUND',
-        54 => 'CURLE_SSL_ENGINE_SETFAILED',
-        55 => 'CURLE_SEND_ERROR',
-        56 => 'CURLE_RECV_ERROR',
-        58 => 'CURLE_SSL_CERTPROBLEM',
-        59 => 'CURLE_SSL_CIPHER',
-        60 => 'CURLE_SSL_CACERT',
-        61 => 'CURLE_BAD_CONTENT_ENCODING',
-        62 => 'CURLE_LDAP_INVALID_URL',
-        63 => 'CURLE_FILESIZE_EXCEEDED',
-        64 => 'CURLE_USE_SSL_FAILED',
-        65 => 'CURLE_SEND_FAIL_REWIND',
-        66 => 'CURLE_SSL_ENGINE_INITFAILED',
-        67 => 'CURLE_LOGIN_DENIED',
-        68 => 'CURLE_TFTP_NOTFOUND',
-        69 => 'CURLE_TFTP_PERM',
-        70 => 'CURLE_REMOTE_DISK_FULL',
-        71 => 'CURLE_TFTP_ILLEGAL',
-        72 => 'CURLE_TFTP_UNKNOWNID',
-        73 => 'CURLE_REMOTE_FILE_EXISTS',
-        74 => 'CURLE_TFTP_NOSUCHUSER',
-        75 => 'CURLE_CONV_FAILED',
-        76 => 'CURLE_CONV_REQD',
-        77 => 'CURLE_SSL_CACERT_BADFILE',
-        78 => 'CURLE_REMOTE_FILE_NOT_FOUND',
-        79 => 'CURLE_SSH',
-        80 => 'CURLE_SSL_SHUTDOWN_FAILED',
-        81 => 'CURLE_AGAIN',
-        82 => 'CURLE_SSL_CRL_BADFILE',
-        83 => 'CURLE_SSL_ISSUER_ERROR',
-        84 => 'CURLE_FTP_PRET_FAILED',
-        84 => 'CURLE_FTP_PRET_FAILED',
-        85 => 'CURLE_RTSP_CSEQ_ERROR',
-        86 => 'CURLE_RTSP_SESSION_ERROR',
-        87 => 'CURLE_FTP_BAD_FILE_LIST',
-        88 => 'CURLE_CHUNK_FAILED'
-    ];
+    /** Erneuerung des Tokens, Portainer-Sitzungen laufen standardmäßig nach 8 Stunden ab */
+    private const TokenRenewInterval = 7 * 60 * 60 * 1000;
 
-    private static $http_error =
-        [
-            400 => 'Bad Request',
-            401 => 'Unauthorized',
-            403 => 'Forbidden',
-            404 => 'Not Found',
-            405 => 'Method Not Allowed',
-            413 => 'Request-size limit exceeded',
-            417 => 'Request-size limit exceeded',
-            429 => 'API Rate limit exceeded',
-            500 => 'Server error'
-        ];
+    /** HTTP-Fehler per trigger_error melden (aus, wenn die Kind-Instanz entscheidet) */
+    private bool $ReportHttpErrors = true;
+    /** HTTP-Statuscode der letzten Anfrage, 0 bei Verbindungs- oder Anmeldefehler */
+    private int $LastHttpCode = 0;
+    /** Fehlermeldung der letzten Anfrage bei einem HTTP-Fehler */
+    private string $LastError = '';
+    /** Verbindungsaufbau aus ApplyChanges: ein Fehler gilt als „nicht erreichbar“, nicht als „Verbindung verloren“ */
+    private bool $Connecting = false;
 
     public function Create(): void
     {
@@ -122,8 +45,10 @@ class PortainerIO extends IPSModuleStrict
         $this->RegisterPropertyString(\Portainer\IO\Property::Host, '');
         $this->RegisterPropertyString(\Portainer\IO\Property::Username, '');
         $this->RegisterPropertyString(\Portainer\IO\Property::Password, '');
+        $this->RegisterPropertyBoolean(\Portainer\IO\Property::VerifyCertificate, false);
+        $this->RegisterPropertyString(\Portainer\IO\Property::ApiKey, '');
         $this->RegisterAttributeString(\Portainer\IO\Attribute::Token, '');
-        $this->RegisterTimer(\Portainer\IO\Timer::UpdateToken, 0, 'IPS_RequestAction($_IPS[\'TARGET\'],\'UpdateToken\' , 0);');
+        $this->RegisterTimer(\Portainer\IO\Timer::UpdateToken, 0, 'IPS_RequestAction($_IPS[\'TARGET\'], \'' . \Portainer\IO\Action::UpdateToken . '\', 0);');
         $this->Host = '';
     }
 
@@ -136,42 +61,141 @@ class PortainerIO extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         $this->Host = '';
+        //Never delete this line!
         parent::ApplyChanges();
-        if ($this->ReadPropertyBoolean(\Portainer\IO\Property::Open)) {
-            $this->Host = $this->ReadPropertyString(\Portainer\IO\Property::Host);
-            if ($this->Login()) {
-                $this->SetStatus(IS_ACTIVE);
-            } else {
-                if ($this->GetStatus() == IS_ACTIVE) {
-                    $this->SetStatus(self::IS_Unauthorized);
-                }
-            }
+        $this->SetTimerInterval(\Portainer\IO\Timer::UpdateToken, 0);
+        if (!$this->ReadPropertyBoolean(\Portainer\IO\Property::Open)) {
+            $this->WriteAttributeString(\Portainer\IO\Attribute::Token, '');
+            $this->SetStatus(IS_INACTIVE);
+            return;
         }
-
+        $Host = rtrim(trim($this->ReadPropertyString(\Portainer\IO\Property::Host)), '/');
+        if ($Host === '') {
+            $this->WriteAttributeString(\Portainer\IO\Attribute::Token, '');
+            $this->SetStatus(self::IS_InvalidHost);
+            return;
+        }
+        $this->Host = $Host;
+        // Status setzt SendRequest anhand der Antwort
+        $this->Connecting = true;
+        if ($this->UsesApiKey()) {
+            // Mit API-Token gibt es keine Anmeldung und kein Sitzungs-Token
+            $this->WriteAttributeString(\Portainer\IO\Attribute::Token, '');
+            $this->CheckApiKey();
+        } else {
+            // Das bisherige Token bleibt bis zur erfolgreichen Anmeldung gültig, damit parallele Anfragen
+            // der Kind-Instanzen keine zweite Anmeldung auslösen. Login verwirft es bei einem Fehler.
+            $this->Login();
+        }
+        $this->Connecting = false;
     }
 
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
-            case 'UpdateToken':
-                $this->Login();
+            case \Portainer\IO\Action::UpdateToken:
+                if (!$this->UsesApiKey()) {
+                    $this->Login();
+                }
+                break;
+            case \Portainer\IO\Action::ApiKeyChanged:
+                $this->SetCredentialFieldsEnabled((string) $Value === '');
                 break;
         }
     }
 
+    /**
+     * Formular mit dem passenden Zustand der Anmeldefelder.
+     * Ist ein API-Token gespeichert, sind Benutzername und Passwort deaktiviert.
+     */
+    public function GetConfigurationForm(): string
+    {
+        $Form = json_decode((string) file_get_contents(__DIR__ . '/form.json'), true);
+        $Enabled = !$this->UsesApiKey();
+        foreach ($Form['elements'] as &$Element) {
+            if (!isset($Element['items'])) {
+                continue;
+            }
+            foreach ($Element['items'] as &$Item) {
+                if (in_array($Item['name'] ?? '', [\Portainer\IO\Property::Username, \Portainer\IO\Property::Password], true)) {
+                    $Item['enabled'] = $Enabled;
+                }
+            }
+            unset($Item);
+        }
+        unset($Element);
+        return (string) json_encode($Form);
+    }
+
+    /**
+     * Nimmt die Anfragen der Kind-Instanzen entgegen.
+     *
+     * HTTP-Fehler der Anfrage (z.B. 404) werden nicht gemeldet, sondern an die Kind-Instanz
+     * zurückgegeben, damit diese anhand ihres Status entscheidet, ob sie den Fehler meldet.
+     * Fehler der Verbindung oder Anmeldung meldet der IO selbst, sie ändern seinen Status.
+     *
+     * @param string $JSONString JSON mit den Feldern aus \Portainer\ForwardData
+     *
+     * @return string Serialisiertes Array mit den Feldern aus \Portainer\IOResponse
+     */
     public function ForwardData(string $JSONString): string
     {
         $Data = json_decode($JSONString, true);
-        $Result = $this->SendRequest($Data['URI'], $Data['Method'], $Data['Data'], ($Data['Timeout'] ?? 5000));
-        return serialize($Result);
+        if (!is_array($Data) || !is_string($Data[\Portainer\ForwardData::Uri] ?? null) || !is_string($Data[\Portainer\ForwardData::Method] ?? null)) {
+            trigger_error($this->Translate('Invalid request data.'), E_USER_NOTICE);
+            return serialize(false);
+        }
+        $PostData = is_array($Data[\Portainer\ForwardData::Data] ?? null) ? $Data[\Portainer\ForwardData::Data] : [];
+        $Timeout = is_int($Data[\Portainer\ForwardData::Timeout] ?? null) ? $Data[\Portainer\ForwardData::Timeout] : 5000;
+        $this->ReportHttpErrors = false;
+        $Result = $this->SendRequest($Data[\Portainer\ForwardData::Uri], $Data[\Portainer\ForwardData::Method], $PostData, $Timeout);
+        return serialize([
+            \Portainer\IOResponse::HttpCode => $this->LastHttpCode,
+            \Portainer\IOResponse::Result   => $Result,
+            \Portainer\IOResponse::Error    => $this->LastError
+        ]);
     }
 
-    protected function ModulErrorHandler(int $errno, string $errstr): bool
+    /**
+     * Aktiviert oder deaktiviert die Felder für Benutzername und Passwort im geöffneten Formular.
+     *
+     * @param bool $Enabled true wenn kein API-Token eingetragen ist
+     */
+    private function SetCredentialFieldsEnabled(bool $Enabled): void
     {
-        echo $errstr . PHP_EOL;
-        return true;
+        $this->UpdateFormField(\Portainer\IO\Property::Username, 'enabled', $Enabled);
+        $this->UpdateFormField(\Portainer\IO\Property::Password, 'enabled', $Enabled);
     }
 
+    /**
+     * Prüft ob ein API-Token statt Benutzername und Passwort verwendet wird.
+     */
+    private function UsesApiKey(): bool
+    {
+        return $this->ReadPropertyString(\Portainer\IO\Property::ApiKey) !== '';
+    }
+
+    /**
+     * Prüft das API-Token mit einer kleinen Anfrage. Status und Fehler setzt SendRequest.
+     *
+     * @return bool true wenn Portainer das Token akzeptiert
+     */
+    private function CheckApiKey(): bool
+    {
+        $Result = $this->SendRequest(\Portainer\Api\Url::AuthCheck);
+        // z.B. HTTP 200 ohne gültiges JSON (Anmeldeseite eines Proxys): Status wäre sonst noch aktiv
+        if (!is_array($Result) && ($this->GetStatus() < IS_EBASE)) {
+            $this->SetStatus(self::IS_Unauthorized);
+        }
+        return is_array($Result);
+    }
+
+    /**
+     * Meldet sich an Portainer an und speichert das Token.
+     * Fehler meldet bereits SendRequest.
+     *
+     * @return bool true bei erfolgreicher Anmeldung
+     */
     private function Login(): bool
     {
         $Data = [
@@ -179,23 +203,105 @@ class PortainerIO extends IPSModuleStrict
             'password' => $this->ReadPropertyString(\Portainer\IO\Property::Password)
         ];
         $Result = $this->SendRequest(\Portainer\Api\Url::Auth, \Portainer\Api\HTTP::POST, $Data);
-        $this->SendDebug('Login Result', $Result, 0);
-        if ($Result) {
-            $this->UpdateToken($Result);
+        if (!is_array($Result)) {
+            $this->LoginFailed();
+            return false;
         }
-        return (bool) $Result;
+        if (!is_string($Result[\Portainer\IO\Attribute::Token] ?? null) || ($Result[\Portainer\IO\Attribute::Token] === '')) {
+            $this->SetStatus(self::IS_Unauthorized);
+            $this->LoginFailed();
+            trigger_error($this->Translate('Login response contains no token.'), E_USER_NOTICE);
+            return false;
+        }
+        $this->SendDebug('Login', 'Token received, length: ' . strlen($Result[\Portainer\IO\Attribute::Token]), 0);
+        $this->WriteAttributeString(\Portainer\IO\Attribute::Token, $Result[\Portainer\IO\Attribute::Token]);
+        $this->SetTimerInterval(\Portainer\IO\Timer::UpdateToken, self::TokenRenewInterval);
+        return true;
     }
 
-    private function UpdateToken(array $TokenData): void
+    /**
+     * Verwirft das Token nach einer fehlgeschlagenen Anmeldung.
+     * Ohne Token werden keine Anfragen der Kind-Instanzen an Portainer gesendet,
+     * damit falsche Zugangsdaten nicht bei jedem Abruf erneut probiert werden.
+     * Den neuen Versuch übernimmt Symcon: IO-Instanzen im Fehlerzustand werden vom Kernel
+     * automatisch per ApplyChanges repariert. Dafür muss der Status hier ein Fehler sein.
+     */
+    private function LoginFailed(): void
     {
-        $this->WriteAttributeString(\Portainer\IO\Attribute::Token, $TokenData[\Portainer\IO\Attribute::Token]);
-        $this->SetTimerInterval(\Portainer\IO\Timer::UpdateToken, 7 * 60 * 60 * 1000);
+        $this->WriteAttributeString(\Portainer\IO\Attribute::Token, '');
+        $this->SetTimerInterval(\Portainer\IO\Timer::UpdateToken, 0);
+        // z.B. HTTP 200 ohne gültiges JSON (Anmeldeseite eines Proxys): Status wäre sonst noch aktiv
+        if ($this->GetStatus() < IS_EBASE) {
+            $this->SetStatus(self::IS_Unauthorized);
+        }
     }
 
-    private function SendRequest(string $RequestURL, string $RequestMethod = \Omada\HTTP::GET, array $PostData = [], int $Timeout = 5000, array $RequestHeader = []): bool|array
+    /**
+     * Setzt den Status auf aktiv, wenn Portainer erreichbar ist und die Anmeldung gilt.
+     */
+    private function SetStatusActive(): void
+    {
+        if ($this->GetStatus() != IS_ACTIVE) {
+            $this->SetStatus(IS_ACTIVE);
+        }
+    }
+
+    /**
+     * Setzt den Status für eine fehlgeschlagene Verbindung.
+     * War die Instanz im laufenden Betrieb aktiv, gilt die Verbindung als verloren, sonst als nicht erreichbar.
+     */
+    private function SetStatusConnectionError(): void
+    {
+        if (($this->GetStatus() == IS_ACTIVE) && !$this->Connecting) {
+            $this->SetStatus(self::IS_ConnectionLost);
+        } elseif ($this->GetStatus() != self::IS_ConnectionLost) {
+            $this->SetStatus(self::IS_NotReachable);
+        }
+    }
+
+    /**
+     * Liefert eine übersetzte Fehlermeldung zu einer HTTP-Fehlerantwort.
+     *
+     * @param int    $HttpCode HTTP-Statuscode
+     * @param string $Body     Body der Antwort
+     *
+     * @return string Fehlermeldung
+     */
+    private function GetHttpErrorMessage(int $HttpCode, string $Body): string
+    {
+        $Message = \Portainer\Api\Response::GetErrorMessage($Body);
+        if ($Message === '') {
+            $Message = $this->Translate(\Portainer\Api\Response::GetHttpStatusText($HttpCode));
+        }
+        return sprintf($this->Translate('HTTP error %d: %s'), $HttpCode, $Message);
+    }
+
+    /**
+     * Sendet eine Anfrage an die Portainer API.
+     * Fehler werden per E_USER_NOTICE an den Aufrufer gemeldet.
+     *
+     * @param string $RequestURL    Pfad unterhalb von `/api`
+     * @param string $RequestMethod HTTP-Methode
+     * @param array  $PostData      Daten, die als JSON gesendet werden
+     * @param int    $Timeout       Zeitüberschreitung in Millisekunden
+     * @param array  $RequestHeader Zusätzliche Header
+     * @param bool   $AllowRelogin  Bei 401 einmal neu anmelden und die Anfrage wiederholen
+     *
+     * @return bool|array Dekodierte Antwort, true bei Erfolg ohne Inhalt, false bei Fehler
+     */
+    private function SendRequest(string $RequestURL, string $RequestMethod = \Portainer\Api\HTTP::GET, array $PostData = [], int $Timeout = 5000, array $RequestHeader = [], bool $AllowRelogin = true): bool|array
     {
         /** @var array $_IPS */
-        if (!$this->Host) {
+        $this->LastHttpCode = 0;
+        $this->LastError = '';
+        if ($this->Host === '') {
+            return false;
+        }
+        $IsAuthRequest = (strpos($RequestURL, \Portainer\Api\Url::Auth . '/') === 0) || ($RequestURL === \Portainer\Api\Url::Auth);
+        $ApiKey = $this->ReadPropertyString(\Portainer\IO\Property::ApiKey);
+        // Anmeldung ist fehlgeschlagen, neuer Versuch erfolgt per ApplyChanges (Nutzer oder Reparatur durch Symcon)
+        if (($ApiKey === '') && !$IsAuthRequest && ($this->ReadAttributeString(\Portainer\IO\Attribute::Token) === '')) {
+            trigger_error($this->Translate('Not logged in to Portainer.'), E_USER_NOTICE);
             return false;
         }
         $CurlURL = $this->Host . '/api' . $RequestURL;
@@ -208,17 +314,21 @@ class PortainerIO extends IPSModuleStrict
             'User-Agent: Symcon Portainer-Lib by Nall-chan',
             'Content-Type: application/json',
         ], $RequestHeader);
-        if (strpos($RequestURL, \Portainer\Api\Url::Auth) !== 0) {
+        if ($ApiKey !== '') {
+            $Headers[] = 'X-API-Key: ' . $ApiKey;
+        } elseif (!$IsAuthRequest) {
             $Headers[] = 'Authorization: Bearer ' . $this->ReadAttributeString(\Portainer\IO\Attribute::Token);
         }
         $ch = curl_init($CurlURL);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        // Portainer nutzt standardmäßig ein selbst signiertes Zertifikat, die Prüfung ist daher optional
+        $VerifyCertificate = $this->ReadPropertyBoolean(\Portainer\IO\Property::VerifyCertificate);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $VerifyCertificate);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $VerifyCertificate ? 2 : 0);
         if (count($PostData)) {
             $Payload = json_encode($PostData);
-            $this->SendDebug('RequestData:' . $_IPS['THREAD'], $Payload, 0);
+            $this->SendDebug('RequestData:' . $_IPS['THREAD'], \Portainer\Api\Response::MaskSecrets($Payload), 0);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $Payload);
         }
@@ -228,91 +338,80 @@ class PortainerIO extends IPSModuleStrict
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, $Timeout);
-        $response = curl_exec($ch);
+        $Response = curl_exec($ch);
 
-        $HttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $HttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($HttpCode != 0) {
-            $this->SendDebug('Header Send:' . $_IPS['THREAD'], curl_getinfo($ch)['request_header'], 0);
+            $this->SendDebug('Header Send:' . $_IPS['THREAD'], \Portainer\Api\Response::MaskSecrets((string) curl_getinfo($ch, CURLINFO_HEADER_OUT)), 0);
         }
-        $curl_errno = curl_errno($ch);
         $Header = '';
-        $Result = '';
-        if (!is_bool($response)) {
-            do {
-                $header_end = strpos($response, "\r\n\r\n");
-                $Header = substr($response, 0, $header_end);
-                $Result = substr($response, $header_end + 4);
-                $response = $Result;
-            } while (strpos($Result, 'HTTP/') === 0);
-            if (strlen($Result) === 0) {
-                $Result = true;
-            }
+        $Body = '';
+        if (is_string($Response)) {
+            $HeaderSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $Header = \Portainer\Api\Response::GetHeader($Response, $HeaderSize);
+            $Body = \Portainer\Api\Response::GetBody($Response, $HeaderSize);
         }
-        $this->SendDebug('Header Receive:' . $_IPS['THREAD'], $Header, 0);
-        $this->SendDebug('Body Receive:' . $_IPS['THREAD'], $Result, 0);
-        set_error_handler([$this, 'ModulErrorHandler']);
-        switch ($HttpCode) {
-            case 0:
-                if ($this->GetStatus() == IS_ACTIVE) {
-                    $this->SetStatus(self::IS_ConnectionLost);
-                } else {
-                    $this->SetStatus(self::IS_NotReachable);
-                }
-                $this->SendDebug('CURL ERROR', self::$CURL_error_codes[$curl_errno], 0);
-                trigger_error(self::$CURL_error_codes[$curl_errno], E_USER_WARNING);
-                $Result = false;
-                break;
-            case 202:
-            case 204:
-                if (($RequestMethod == \Portainer\Api\HTTP::PUT) || ($RequestMethod == \Portainer\Api\HTTP::DELETE)) {
-                    $Result = true;
-                }
-                break;
-            case 409:
-                $Data = json_decode($Result, true);
-                if (isset($Data['message'])) {
-                    trigger_error($Data['message'], E_USER_WARNING);
-                } else {
-                    trigger_error('unknown error', E_USER_WARNING);
-                }
-                $Result = false;
-                break;
-            case 400:
-            case 404:
-                $Result = false;
-                break;
-            case 403:
-                $this->SetStatus(self::IS_Unauthorized);
-                // Ebenso wie bei 401 noch einmal versuchen anzumelden
-                // No break. Add additional comment above this line if intentional
-            case 401:
-                if (strpos($RequestURL, \Portainer\Api\Url::Auth) !== 0) { //Beim fehlerhaften Login kein weiterer Versuch
-                    if ($this->Login()) {
-                        return $this->SendRequest($RequestURL, $RequestMethod, $PostData, $Timeout, $RequestHeader);
-                    }
-                }
-                // Wenn kein Login oder Login nicht erfolgreich, dann weiter mit Ausgabe der Fehlermeldung
-                // No break. Add additional comment above this line if intentional
-            case 405:
-            case 413:
-            case 417:
-            case 429:
-            case 500:
-                $this->SendDebug(self::$http_error[$HttpCode], $HttpCode, 0);
-                trigger_error(self::$http_error[$HttpCode], E_USER_WARNING);
-                $Result = false;
-                break;
-        }
-        if (is_bool($Result)) {
-            restore_error_handler();
-            return $Result;
-        }
-        $Data = json_decode($Result, true);
-        restore_error_handler();
-        if ($Data) {
-            return $Data;
-        }
-        return false;
+        $this->SendDebug('Header Receive:' . $_IPS['THREAD'], \Portainer\Api\Response::MaskSecrets($Header), 0);
+        $this->SendDebug('Body Receive:' . $_IPS['THREAD'], \Portainer\Api\Response::MaskSecrets($Body), 0);
 
+        // Keine Verbindung oder Reverse-Proxy erreicht Portainer nicht
+        if ($HttpCode == 0) {
+            $Error = curl_error($ch);
+            if ($Error === '') {
+                $Error = (string) curl_strerror(curl_errno($ch));
+            }
+            $this->SendDebug('CURL ERROR', $Error, 0);
+            $this->SetStatusConnectionError();
+            trigger_error(sprintf($this->Translate('Portainer not reachable: %s'), $Error), E_USER_NOTICE);
+            return false;
+        }
+        if (\Portainer\Api\Response::IsGatewayError($HttpCode)) {
+            $this->SetStatusConnectionError();
+            trigger_error($this->GetHttpErrorMessage($HttpCode, $Body), E_USER_NOTICE);
+            return false;
+        }
+
+        // Token abgelaufen oder ungültig: einmal neu anmelden und Anfrage wiederholen
+        // Mit API-Token gibt es keine Anmeldung, 401 bedeutet dann ein ungültiges oder widerrufenes Token
+        if (($ApiKey === '') && !$IsAuthRequest && ($HttpCode == 401) && $AllowRelogin) {
+            if ($this->Login()) {
+                return $this->SendRequest($RequestURL, $RequestMethod, $PostData, $Timeout, $RequestHeader, false);
+            }
+            // Login hat den Fehler bereits gemeldet
+            return false;
+        }
+
+        // Anmeldung abgelehnt oder Token trotz neuer Anmeldung ungültig
+        if (($IsAuthRequest && !\Portainer\Api\Response::IsSuccess($HttpCode)) || ($HttpCode == 401)) {
+            $this->SetStatus(self::IS_Unauthorized);
+            trigger_error($this->GetHttpErrorMessage($HttpCode, $Body), E_USER_NOTICE);
+            return false;
+        }
+
+        // Portainer ist erreichbar und die Anmeldung gilt, auch wenn die Anfrage selbst fehlschlägt
+        $this->SetStatusActive();
+        $this->LastHttpCode = $HttpCode;
+        if (!\Portainer\Api\Response::IsSuccess($HttpCode)) {
+            $this->ReportHttpError($this->GetHttpErrorMessage($HttpCode, $Body));
+            return false;
+        }
+        $Result = \Portainer\Api\Response::DecodeBody($Body);
+        if ($Result === false) {
+            $this->ReportHttpError($this->Translate('Invalid response from Portainer.'));
+        }
+        return $Result;
+    }
+
+    /**
+     * Merkt sich einen HTTP-Fehler und meldet ihn, wenn die Anfrage nicht von einer Kind-Instanz stammt.
+     *
+     * @param string $Error Fehlermeldung
+     */
+    private function ReportHttpError(string $Error): void
+    {
+        $this->LastError = $Error;
+        if ($this->ReportHttpErrors) {
+            trigger_error($Error, E_USER_NOTICE);
+        }
     }
 }
